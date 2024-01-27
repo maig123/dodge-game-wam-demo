@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wasm-game
+  labels:
+    app: apache
+spec: 
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: apache
+  template: 
+    metadata:
+      labels:
+        app: apache
+    spec: 
+      containers:
+      - name: wasm-game
+        image: localhost:5001/my-wasm-game-demo:6
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wasm-game-service
+spec:
+  selector:
+    app: apache
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80  
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wasm-game-service
+spec:
+  tls: 
+  - hosts:
+    - mywasmgame.127.0.0.1.sslip.io
+    secretName: democert
+  rules:
+  - host: "mywasmgame.127.0.0.1.sslip.io"
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: 
+              name: wasm-game-service
+              port: 
+                number: 80
+
